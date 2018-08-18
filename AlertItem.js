@@ -1,11 +1,19 @@
 import React from 'react';
 import PropTypes from "prop-types";
-import { Button, Slider, StyleSheet, Text, View, ViewPropTypes } from 'react-native';
+import { Button, Dimensions, Modal, Slider, StyleSheet, Text, View, ViewPropTypes, TouchableHighlight, TouchableOpacity, TouchableNativeFeedback } from 'react-native';
 import { MapView } from 'expo';
 import { AsyncStorage } from "react-native";
+import AlertItemModal from "./AlertItemModal"
 
+const { width: viewportWidth, height: viewportHeight } = Dimensions.get('window');
+
+const numberWithCommas = (x="") => {
+  if (!x) return ""
+  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+}
 export default class AlertItem extends React.Component {
   state = {
+    isExpanded: false,
   }
 
   static propTypes = {
@@ -17,58 +25,156 @@ export default class AlertItem extends React.Component {
   componentDidMount() {
   }
 
-  updateDistance = newValue => {
-    this.setState({ distance: newValue });
-    this.storeData(newValue);
-  }
-
-  storeData = (distance) => {
-    const index = 0;
-    AsyncStorage.setItem(`${STORAGE_BASE}alert${index}`, distance + "")
-    this.grabAlerts();
-  }
-
-  grabAlerts = async () => {
-    let alerts = [];
-    for (let i = 0; i < MAX_ALERTS; i++) {
-      const alert = await AsyncStorage.getItem(`${STORAGE_BASE}alert${i}`);
-      if (alert) alerts.push(alert);
-    }
-    this.setState({ alerts });
-  }
-
   onDistanceChange = newValue => {
     this.props.onUpdate({
-      location: ["near-me"],
       distance: newValue,
     });
   }
 
+  onResetLocation = () => {
+    console.log("onResetLocation")
+    this.props.onUpdate({
+      latitude: null,
+      longitude: null,
+    })
+  }
+
+  onModalToggle = (newState) => () => {
+    if (newState && !this.props.distance) this.createAlert();
+    this.setState({ isExpanded: newState });
+  }
+
+  createAlert = () => {
+    this.props.onUpdate({
+      distance: 20,
+    })
+  }
+
   render() {
-    const { location, distance } = this.props
+    const { index, label, latitude, longitude, distance, color, onDelete, ...props } = this.props
+    const { isExpanded } = this.state
+    const isNewAlert = !distance;
 
     return (
-      <View style={styles.container}>
-          <Text>
-            Alert: { location } { distance }
-          </Text>
+      <TouchableNativeFeedback onPress={this.onModalToggle(true)}>
+          <View style={styles.container} {...props}>
+            {isExpanded && (
+              <AlertItemModal
+                label={label}
+                latitude={latitude}
+                longitude={longitude}
+                distance={distance}
+                isVisible={true}
+                onDistanceChange={this.onDistanceChange}
+                onResetLocation={this.onResetLocation}
+                onClose={this.onModalToggle(false)}
+                onDelete={onDelete}
+              />
+            )}
 
-          <Slider
-            value={distance}
-            maximumValue={20}
-            onValueChange={this.onDistanceChange}
-            style={{ width: "100%" }}
-          />
+            {isNewAlert ? (
+                <View styles={{alignItems: "center", justifyContent: "center", width: "100%", height: "100%"}}>
+                  <Text style={{margin: "auto"}}>
+                    Add new alert
+                  </Text>
+                </View>
+            ) : (
+              <View>
+                {label && (
+                  <View>
+                    <Text style={styles.label}>
+                      { (label || `Alert ${ index }`).toUpperCase() }
+                    </Text>
+                  </View>
+                )}
+                <View style={styles.content}>
+                  <View style={styles.text}>
+                    {!latitude && (
+                      <Text style={styles.location}>
+                        Near me
+                      </Text>
+                    )}
+                    {false && latitude && (
+                      <Text style={styles.location}>
+                        { latitude }, { longitude }
+                      </Text>
+                    )}
+                    {distance && (
+                      <Text style={styles.distance}>
+                        { numberWithCommas(Math.round(distance)) } feet
+                      </Text>
+                    )}
 
-      </View>
+                    <Slider
+                      style={styles.slider}
+                      value={distance}
+                      minimumValue={10}
+                      maximumValue={5000}
+                      onValueChange={this.onDistanceChange}
+                    />
+                </View>
+              </View>
+            </View>
+          )}
+        </View>
+      </TouchableNativeFeedback>
     );
   }
 }
 
 const styles = StyleSheet.create({
   container: {
-    width: "100%",
-    // alignItems: 'center',
-    // justifyContent: 'center',
+    // flex: 1,
+    // width: "100%",
+    flexDirection: "column",
+    height: 80,
+    marginTop: 20,
+    marginBottom: 20,
+    padding: 20,
+    paddingTop: 17,
+    backgroundColor: "rgba(255,255,255,1)",
+    borderRadius: 12,
+  },
+  containerExpanded: {
+    flexDirection: "column",
+    height: viewportHeight * 0.9,
+    width: viewportWidth * 0.9,
+    marginTop: -viewportHeight * 0.8,
+    marginBottom: 20,
+    padding: 20,
+    paddingTop: 17,
+    backgroundColor: "rgba(255,255,255,1)",
+    borderRadius: 12,
+
+  },
+  content: {
+    flexDirection: "row",
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  text: {
+    flexDirection: "row",
+    flex: 2,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  location: {
+    // paddingLeft: 6,
+    paddingRight: 6,
+    opacity: 0.4,
+  },
+  slider: {
+    flex: 1,
+  },
+  link: {
+    flex: 0,
+    width: 50,
+  },
+  linkText: {
+    fontSize: 10,
   },
 });
