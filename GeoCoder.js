@@ -1,18 +1,25 @@
-const NodeGeocoder = require('node-geocoder');
-const config = require('./app.json');
+import Geocoder from 'react-native-geocoding';
+import * as config from './app.json'
+console.log(config); 
+Geocoder.init(config.expo.android.config.googleMaps.apiKey); 
 
  
-const geocoder = NodeGeocoder(config.geoCode);
- 
-export function getCords(address){
-    return geocoder.geocode(address)
-    .then(function(res) {
-        return [res[0].latitude, res[0].longitude];
-    })
-    .catch(function(err) {
-      console.log(err);
-    });
+export default function
+    
+    getCords(address, link){
+        return Geocoder.from(address)
+        .then(function(res) {
+            return {
+              "cords" :  [res.results[0].geometry.location.lat, res.results[0].geometry.location.lng], 
+               address,
+               link     
+            }
+        })
+        .catch(function(err) {
+          console.log(err);
+        });
+    }
+    
 
-}
 
 

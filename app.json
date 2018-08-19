@@ -12,12 +12,6 @@
       "config": {
         "googleMaps": { "apiKey": "" }   
      }
-    },
-    "geoCode": {
-      "provider": "google",
-      "httpAdapter": "https", 
-      "apiKey": "",
-      "formatter": null   
-    }     
-  }
+    }
+  } 
 }

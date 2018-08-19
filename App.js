@@ -3,22 +3,37 @@ import { Button, Slider, StyleSheet, Text, View } from 'react-native';
 import { MapView, Permissions, Notifications } from 'expo';
 import Alerts from './Alerts';
 import { MarkerAnimated, Circle } from 'react-native-maps';
+import * as rssParser from 'react-native-rss-parser';
+import buildIncidents from './IncidentBuilder'
 
 export default class App extends React.Component {
   state = {
     coords: {},
     token: null,
+    incidents: []
   }
 
   componentDidMount() {
     this.grabLocation()
     this.registerForPushNotifications();
+    this.grab911Messages();
   }
 
   grabLocation = () => {
     navigator.geolocation.getCurrentPosition(d => {
       this.setState({ coords: d.coords });
     })
+  }
+
+  grab911Messages = ()=> {
+    fetch('https://www2.monroecounty.gov/911/rss.php')
+      .then((response) => response.text())
+      .then((responseData) => rssParser.parse(responseData))
+      .then((rss) => buildIncidents( rss.items.map(x => {
+        return { link: x.id,title: x.title }; 
+      }))).then(inc => {
+         this.setState({incidents: inc}); 
+      }) 
   }
 
   handleNotification = notification => {
@@ -66,3 +81,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+
+
