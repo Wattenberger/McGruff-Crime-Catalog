@@ -15,7 +15,8 @@ const MAX_ALERTS = 5;
 const STORAGE_BASE = "@McGruffCrimeCatalog:";
 const KEY_SEPERATOR = "--";
 const LOCATION_SEPARATOR = ",";
-const colors = ["teal", "gold", "magenta", "tomato", "plum"] // android maps have limited supported colors
+// const colors = ["teal", "gold", "magenta", "tomato", "plum"] // android maps have limited supported colors
+const colors = ["#00ff46", "#00ffdf", "#7100ff", "#ff008a", "#ff4a00", "#ffe300"] // android maps have limited supported colors
 export default class Alerts extends React.Component {
   state = {
     alerts: [],
@@ -63,7 +64,8 @@ export default class Alerts extends React.Component {
     if (newAlertParameters) {
       const currentAlert = Object.assign({},
         alerts[index],
-        newAlertParameters.latitude !== undefined ? {latitude: newAlertParameters.latitude} : {},
+        newAlertParameters.label     !== undefined ? {label:     newAlertParameters.label    } : {},
+        newAlertParameters.latitude  !== undefined ? {latitude:  newAlertParameters.latitude } : {},
         newAlertParameters.longitude !== undefined ? {longitude: newAlertParameters.longitude} : {},
         newAlertParameters.distance ? {distance: newAlertParameters.distance} : {},
       )
@@ -108,6 +110,10 @@ export default class Alerts extends React.Component {
     this.setState({activeAlertIndex: alertIndex})
   }
 
+  setCarouselItem = i => () => {
+    if (this.carousel) this.carousel.snapToItem(i)
+  }
+
   onDeleteAlert = alertIndex => () => {
     const alerts = [
       ...this.state.alerts.slice(0, alertIndex),
@@ -145,6 +151,7 @@ export default class Alerts extends React.Component {
       onUpdate={this.onUpdateAlert(index)}
       onFocus={this.setMapRegionToAlert(index)}
       onDelete={this.onDeleteAlert(index)}
+      onCenterOnAlert={this.setMapRegionToAlert(index)}
     />
   )
 
@@ -165,18 +172,20 @@ export default class Alerts extends React.Component {
               longitudeDelta: 0.03,
             }}
             showsUserLocation
+            onMapReady={this.setMapRegionToAlert(0)}
           >
           {alerts.map((alert, i) => (
               <React.Fragment key={i}>
                 <MarkerAnimated
                   draggable
-                  onDragEnd={this.onMarkerDragEnd(i)}
                   coordinate={!alert.latitude ? currentLocation : {
                     latitude: +alert.latitude,
                     longitude: +alert.longitude,
                   }}
                   title={alert.label}
-                  pinColor={colors[i]}
+                  pinColor={alert.color}
+                  onPress={this.setCarouselItem(i)}
+                  onDragEnd={this.onMarkerDragEnd(i)}
                 />
                 <Circle
                   center={!alert.latitude ? currentLocation : {
@@ -185,7 +194,7 @@ export default class Alerts extends React.Component {
                   }}
                   radius={feetToMeters(alert.distance)}
                   strokeColor="transparent"
-                  fillColor="rgba(24,24,50, 0.2)"
+                  fillColor={`${alert.color}3b`}
                 />
               </React.Fragment>
           ))}

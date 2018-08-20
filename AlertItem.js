@@ -1,9 +1,10 @@
 import React from 'react';
 import PropTypes from "prop-types";
 import { Button, Dimensions, Modal, Slider, StyleSheet, Text, View, ViewPropTypes, TouchableHighlight, TouchableOpacity, TouchableNativeFeedback } from 'react-native';
-import { MapView } from 'expo';
+import { MapView, Svg } from 'expo';
 import { AsyncStorage } from "react-native";
 import AlertItemModal from "./AlertItemModal"
+import { Ionicons } from '@expo/vector-icons';
 
 const { width: viewportWidth, height: viewportHeight } = Dimensions.get('window');
 
@@ -22,6 +23,10 @@ export default class AlertItem extends React.Component {
     onUpdate: PropTypes.func,
   }
 
+  static defaultProps = {
+    color: "#666"
+  }
+
   componentDidMount() {
   }
 
@@ -32,7 +37,6 @@ export default class AlertItem extends React.Component {
   }
 
   onResetLocation = () => {
-    console.log("onResetLocation")
     this.props.onUpdate({
       latitude: null,
       longitude: null,
@@ -41,6 +45,7 @@ export default class AlertItem extends React.Component {
 
   onModalToggle = (newState) => () => {
     if (newState && !this.props.distance) this.createAlert();
+    if (!newState) this.props.onCenterOnAlert();
     this.setState({ isExpanded: newState });
   }
 
@@ -51,7 +56,7 @@ export default class AlertItem extends React.Component {
   }
 
   render() {
-    const { index, label, latitude, longitude, distance, color, onDelete, ...props } = this.props
+    const { index, label, latitude, longitude, distance, color, onUpdate, onDelete, ...props } = this.props
     const { isExpanded } = this.state
     const isNewAlert = !distance;
 
@@ -64,8 +69,10 @@ export default class AlertItem extends React.Component {
                 latitude={latitude}
                 longitude={longitude}
                 distance={distance}
+                color={color}
                 isVisible={true}
                 onDistanceChange={this.onDistanceChange}
+                onUpdate={onUpdate}
                 onResetLocation={this.onResetLocation}
                 onClose={this.onModalToggle(false)}
                 onDelete={onDelete}
@@ -73,17 +80,44 @@ export default class AlertItem extends React.Component {
             )}
 
             {isNewAlert ? (
-                <View styles={{alignItems: "center", justifyContent: "center", width: "100%", height: "100%"}}>
-                  <Text style={{margin: "auto"}}>
-                    Add new alert
-                  </Text>
+                <View style={{flexDirection: "row", alignItems: "baseline", justifyContent: "center", width: "100%", paddingTop: 12, paddingBottom: 12,}}>
+
+                  <View style={{marginRight: 8}}>
+                    <Svg height={25} width={25}>
+                      <Svg.Circle cx={12} cy={12} r={10} strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} stroke={color} fill="none" />
+                      <Svg.Line x1="8" y1="12" x2="16" y2="12" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} stroke={color} fill="none" />
+                      <Svg.Line x1="12" y1="8" x2="12" y2="16" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} stroke={color} fill="none" />
+                    </Svg>
+                  </View>
+                  <View>
+                    <Text style={styles.label}>
+                      Add new alert
+                    </Text>
+                  </View>
                 </View>
             ) : (
               <View>
                 {label && (
-                  <View>
+                  <View style={{flexDirection: "row"}}>
+                    <Svg height={30} width={30}>
+                      <Svg.Circle
+                        cx={12}
+                        cy={10}
+                        r={3}
+                        strokeWidth={2.5}
+                        stroke={color}
+                        fill="none"
+                      />
+                      <Svg.Path
+                        d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
+                        strokeWidth={2}
+                        stroke={color}
+                        fill="none"
+                      />
+                    </Svg>
+
                     <Text style={styles.label}>
-                      { (label || `Alert ${ index }`).toUpperCase() }
+                      { label || `Alert ${ index }` }
                     </Text>
                   </View>
                 )}
@@ -101,7 +135,7 @@ export default class AlertItem extends React.Component {
                     )}
                     {distance && (
                       <Text style={styles.distance}>
-                        { numberWithCommas(Math.round(distance)) } feet
+                        within { numberWithCommas(Math.round(distance)) } feet
                       </Text>
                     )}
 
@@ -109,10 +143,17 @@ export default class AlertItem extends React.Component {
                       style={styles.slider}
                       value={distance}
                       minimumValue={10}
+                      thumbTintColor={color}
+                      minimumTrackTintColor={color}
                       maximumValue={5000}
                       onValueChange={this.onDistanceChange}
                     />
                 </View>
+              </View>
+              <View style={{marginTop: 1}}>
+                <Text style={{opacity: 0.4}}>
+                  Drag marker to move location
+                </Text>
               </View>
             </View>
           )}
@@ -127,7 +168,7 @@ const styles = StyleSheet.create({
     // flex: 1,
     // width: "100%",
     flexDirection: "column",
-    height: 80,
+    // height: 80,
     marginTop: 20,
     marginBottom: 20,
     padding: 20,
@@ -157,10 +198,9 @@ const styles = StyleSheet.create({
     flex: 2,
   },
   label: {
-    fontSize: 13,
+    fontSize: 18,
     fontWeight: 'bold',
-    letterSpacing: 0.5,
-    marginBottom: 8,
+    flex: 1,
   },
   location: {
     // paddingLeft: 6,
