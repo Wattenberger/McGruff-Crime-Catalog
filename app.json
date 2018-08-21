@@ -2,6 +2,7 @@
   "expo": {
     "name": "McGruff Crime Catalog",
     "slug": "mcgruff-crime-catalog",
+    "icon": "icon.png",
     "sdkVersion": "27.0.0",
      "ios": {
       "bundleIdentifier": "McGruff.Crime.Catalog"
