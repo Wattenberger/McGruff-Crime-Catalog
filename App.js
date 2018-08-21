@@ -5,6 +5,7 @@ import Alerts from './Alerts';
 import { MarkerAnimated, Circle } from 'react-native-maps';
 import * as rssParser from 'react-native-rss-parser';
 import buildIncidents from './IncidentBuilder'
+import * as firebase from "firebase";
 
 export default class App extends React.Component {
   state = {
@@ -17,6 +18,35 @@ export default class App extends React.Component {
     this.grabLocation()
     this.registerForPushNotifications();
     this.grab911Messages();
+  }
+
+  extractToken(token){
+    return /\[(.*?)\]/.exec(token)[1]; 
+  }
+
+  fireBaseDBTest =  (token)=>{
+
+    firebase.initializeApp({
+      apiKey: "",
+      databaseURL: "https://mcgruff-crime-catalog.firebaseio.com",
+     });
+
+     const pushToken = this.extractToken(token); 
+
+     let userPath = "/user/" + pushToken + "/details";
+
+    return firebase.database().ref(userPath).set({
+         token: pushToken,
+         alerts :[
+           {
+             cords : [43.161030, -77.610924],
+             range : 1 , 
+             name : 'alert1'
+           }
+         ]
+     })
+
+
   }
 
   grabLocation = () => {
@@ -58,6 +88,14 @@ export default class App extends React.Component {
     this.setState({
       token,
     });
+
+    try{
+      await this.fireBaseDBTest(token); 
+
+    }catch(error){
+      console.log(error); 
+    }
+
   }
 
   render() {

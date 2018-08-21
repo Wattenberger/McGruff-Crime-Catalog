@@ -1,9 +1,9 @@
 {
   "expoServerPort": 19000,
   "packagerPort": 19001,
-  "packagerPid": 3740,
+  "packagerPid": 9092,
   "expoServerNgrokUrl": "https://rp-him.matt2323.mcgruff-crime-catalog.exp.direct",
   "packagerNgrokUrl": "https://packager.rp-him.matt2323.mcgruff-crime-catalog.exp.direct",
-  "ngrokPid": 15952,
+  "ngrokPid": 11532,
   "devToolsPort": 19002
 }
