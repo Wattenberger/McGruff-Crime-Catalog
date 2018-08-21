@@ -1,4 +1,5 @@
 import React from 'react';
+import * as firebase from "firebase";
 // import MapView from 'react-native-maps';
 import { Button, Dimensions, Slider, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { MarkerAnimated, Circle } from 'react-native-maps';
@@ -59,6 +60,7 @@ export default class Alerts extends React.Component {
   grabAlert = async i => await AsyncStorage.getItem(`${STORAGE_BASE}alert${i}`);
 
   onUpdateAlert = index => async (newAlertParameters) => {
+    const { token } = this.props
     const { alerts } = this.state
     console.log(newAlertParameters)
     if (newAlertParameters) {
@@ -72,8 +74,20 @@ export default class Alerts extends React.Component {
       const updatedAlert = this.formatAlert(currentAlert, index)
       console.log(updatedAlert,currentAlert )
       await AsyncStorage.setItem(`${STORAGE_BASE}alert${index}`, updatedAlert)
+
+      // await firebase.auth().signInWithEmailAndPassword(email, 'TmPpZEcwSuHYj4X7')
+
+      firebase.database().ref(`users/${token}/alerts/${index}`).set({
+        name: currentAlert.label || "",
+        latitude: +currentAlert.latitude,
+        longitude: +currentAlert.longitude,
+        range: +currentAlert.distance,
+      });
     } else {
       await AsyncStorage.setItem(`${STORAGE_BASE}alert${index}`, "")
+      firebase.database().ref(`users/${token}/alerts`).set({
+        index: null,
+      });
     }
     this.grabAlerts()
   }

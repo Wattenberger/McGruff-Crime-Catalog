@@ -17,36 +17,23 @@ export default class App extends React.Component {
   componentDidMount() {
     this.grabLocation()
     this.registerForPushNotifications();
+    this.initFirebase();
     this.grab911Messages();
   }
 
-  extractToken(token){
-    return /\[(.*?)\]/.exec(token)[1]; 
+  extractToken(token="") {
+    return /\[(.*?)\]/.exec(token)[1];
   }
 
-  fireBaseDBTest =  (token)=>{
-
+  initFirebase = async () => {
     firebase.initializeApp({
       apiKey: "",
+      authDomain: "mcgruff-crime-catalog.firebaseapp.com",
       databaseURL: "https://mcgruff-crime-catalog.firebaseio.com",
-     });
-
-     const pushToken = this.extractToken(token); 
-
-     let userPath = "/user/" + pushToken + "/details";
-
-    return firebase.database().ref(userPath).set({
-         token: pushToken,
-         alerts :[
-           {
-             cords : [43.161030, -77.610924],
-             range : 1 , 
-             name : 'alert1'
-           }
-         ]
-     })
-
-
+      projectId: "mcgruff-crime-catalog",
+      storageBucket: "mcgruff-crime-catalog.appspot.com",
+      messagingSenderId: "499674615284"
+    });
   }
 
   grabLocation = () => {
@@ -60,10 +47,10 @@ export default class App extends React.Component {
       .then((response) => response.text())
       .then((responseData) => rssParser.parse(responseData))
       .then((rss) => buildIncidents( rss.items.map(x => {
-        return { link: x.id,title: x.title }; 
+        return { link: x.id,title: x.title };
       }))).then(inc => {
-         this.setState({incidents: inc}); 
-      }) 
+         this.setState({incidents: inc});
+      })
   }
 
   handleNotification = notification => {
@@ -84,18 +71,11 @@ export default class App extends React.Component {
 
     const token = await Notifications.getExpoPushTokenAsync();
     this.subscription = Notifications.addListener(this.handleNotification);
+    if (!token) return
 
     this.setState({
-      token,
+      token: this.extractToken(token),
     });
-
-    try{
-      await this.fireBaseDBTest(token); 
-
-    }catch(error){
-      console.log(error); 
-    }
-
   }
 
   render() {
