@@ -34,6 +34,9 @@ export default class App extends React.Component {
       storageBucket: "mcgruff-crime-catalog.appspot.com",
       messagingSenderId: "499674615284"
     });
+    const email = "mcgruff@coolguy.com"
+    const pw = "" // FILL IN
+    firebase.auth().signInWithEmailAndPassword(email, pw)
   }
 
   grabLocation = () => {

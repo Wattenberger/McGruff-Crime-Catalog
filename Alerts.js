@@ -75,8 +75,6 @@ export default class Alerts extends React.Component {
       console.log(updatedAlert,currentAlert )
       await AsyncStorage.setItem(`${STORAGE_BASE}alert${index}`, updatedAlert)
 
-      // await firebase.auth().signInWithEmailAndPassword(email, 'TmPpZEcwSuHYj4X7')
-
       firebase.database().ref(`users/${token}/alerts/${index}`).set({
         name: currentAlert.label || "",
         latitude: +currentAlert.latitude,
